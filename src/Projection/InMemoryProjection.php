@@ -34,7 +34,7 @@ final class InMemoryProjection implements Projection, StreamQueryAware
     /**
      * @template SS
      * @param Tags|Tag $tags
-     * @param array<class-string<DomainEvent>, Closure(SS, DomainEvent, EventEnvelope): SS> $handlers
+     * @param array<class-string<DomainEvent>, Closure> $handlers
      * @param SS $initialState
      * @return self<SS>
      */
