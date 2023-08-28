@@ -16,6 +16,7 @@ use Wwwision\DCBLibrary\StreamQueryAware;
 
 /**
  * @template S
+ * @implements Projection<S>
  */
 final class InMemoryProjection implements Projection, StreamQueryAware
 {
@@ -60,6 +61,9 @@ final class InMemoryProjection implements Projection, StreamQueryAware
     public function apply(mixed $state, DomainEvent $domainEvent, EventEnvelope $eventEnvelope): mixed
     {
         if (!array_key_exists($domainEvent::class, $this->handlers)) {
+            return $state;
+        }
+        if (!$domainEvent->tags()->containEvery($this->tags)) {
             return $state;
         }
         return $this->handlers[$domainEvent::class]($state, $domainEvent, $eventEnvelope);
