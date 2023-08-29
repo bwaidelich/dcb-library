@@ -11,12 +11,11 @@ use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\StreamQueryAware;
 
 /**
- * @template S of object
+ * @template S of stdClass
  * @implements Projection<S>
  */
 final class CompositeProjection implements Projection, StreamQueryAware
 {
-
     /**
      * @template PS
      * @param array<string, Projection<PS>> $projections
@@ -27,12 +26,10 @@ final class CompositeProjection implements Projection, StreamQueryAware
     }
 
     /**
-     * @template S of object
      * @template PS
      * @param array<string, Projection<PS>> $projections
-     * @return self<S>
      */
-    public static function create(array $projections): self
+    public static function create(array $projections): self // @phpstan-ignore-line TODO fix
     {
         return new self($projections);
     }
@@ -47,7 +44,7 @@ final class CompositeProjection implements Projection, StreamQueryAware
         foreach ($this->projections as $projectionKey => $projection) {
             $state->{$projectionKey} = $projection->initialState();
         }
-        return $state;
+        return $state;  // @phpstan-ignore-line TODO fix
     }
 
     /**

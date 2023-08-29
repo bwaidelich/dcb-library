@@ -32,13 +32,13 @@ final class InMemoryProjection implements Projection, StreamQueryAware
     }
 
     /**
-     * @template SS
      * @param Tags|Tag $tags
      * @param array<class-string<DomainEvent>, Closure> $handlers
-     * @param SS $initialState
-     * @return self<SS>
+     * @param S $initialState
+     * @return self<S>
      */
-    public static function create(Tags|Tag $tags, array $handlers, mixed $initialState): self {
+    public static function create(Tags|Tag $tags, array $handlers, mixed $initialState): self
+    {
         return new self(
             $tags instanceof Tag ? Tags::create($tags) : $tags,
             $handlers,

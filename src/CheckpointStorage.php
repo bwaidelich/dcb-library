@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary;
@@ -11,5 +12,4 @@ interface CheckpointStorage
     public function updateAndReleaseLock(SequenceNumber $sequenceNumber): void;
 
     public function reset(): void;
-
 }

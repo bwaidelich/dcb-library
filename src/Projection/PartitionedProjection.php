@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\Projection;
@@ -7,11 +8,10 @@ use Wwwision\DCBLibrary\DomainEvent;
 
 /**
  * @template S
- * @implements Projection<S>
+ * @extends Projection<S>
  */
 interface PartitionedProjection extends Projection
 {
-
     public function partitionKey(DomainEvent $domainEvent): string;
 
     /**

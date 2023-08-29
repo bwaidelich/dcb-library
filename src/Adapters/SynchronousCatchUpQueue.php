@@ -1,8 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\Adapters;
-
 
 use Wwwision\DCBEventStore\EventStore;
 use Wwwision\DCBLibrary\CatchUpOptions;
@@ -14,7 +14,6 @@ use Wwwision\DCBLibrary\EventHandling\EventHandlers;
  */
 final class SynchronousCatchUpQueue implements CatchUpQueue
 {
-
     public function __construct(
         private readonly EventStore $eventStore,
         private readonly EventHandlers $eventHandlers,

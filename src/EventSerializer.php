@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary;
@@ -9,5 +10,4 @@ interface EventSerializer
 {
     public function convertEvent(Event $event): DomainEvent;
     public function convertDomainEvent(DomainEvent $domainEvent): Event;
-
 }

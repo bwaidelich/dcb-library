@@ -8,7 +8,7 @@ use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBLibrary\DomainEvent;
 
 /**
- * @template-covariant S
+ * @template S
  */
 interface Projection
 {

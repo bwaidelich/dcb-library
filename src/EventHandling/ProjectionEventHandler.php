@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\EventHandling;
@@ -12,7 +13,7 @@ use Wwwision\DCBLibrary\CatchUpOptions;
 use Wwwision\DCBLibrary\CheckpointStorage;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventSerializer;
-use Wwwision\DCBLibrary\Projection\Projection;
+use Wwwision\DCBLibrary\Projection\PartitionedProjection;
 use Wwwision\DCBLibrary\ProvidesReset;
 use Wwwision\DCBLibrary\ProvidesSetup;
 use Wwwision\DCBLibrary\StreamQueryAware;
@@ -28,10 +29,10 @@ final class ProjectionEventHandler implements EventHandler, ProvidesSetup, Provi
     private array $statesByPartitionKey = [];
 
     /**
-     * @param Projection<S> $projection
+     * @param PartitionedProjection<S> $projection
      */
     public function __construct(
-        private readonly Projection $projection,
+        private readonly PartitionedProjection $projection,
         private readonly CheckpointStorage $checkpointStorage,
         private readonly EventSerializer $eventSerializer,
     ) {
@@ -60,7 +61,7 @@ final class ProjectionEventHandler implements EventHandler, ProvidesSetup, Provi
                 if ($options->progressCallback !== null) {
                     ($options->progressCallback)($eventEnvelope);
                 }
-                $iteration ++;
+                $iteration++;
                 $highestAppliedSequenceNumber = $eventEnvelope->sequenceNumber;
                 if ($options->batchSize === 1 || $iteration % $options->batchSize === 0) {
                     $this->finishCatchUp($highestAppliedSequenceNumber);

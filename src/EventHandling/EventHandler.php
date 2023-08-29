@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\EventHandling;
@@ -15,5 +16,4 @@ interface EventHandler
      * @param Closure(StreamQuery $query, ?SequenceNumber $from): EventStream $read
      */
     public function catchUp(Closure $read, CatchUpOptions $options): void;
-
 }

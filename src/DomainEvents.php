@@ -14,7 +14,6 @@ use Traversable;
  */
 final class DomainEvents implements IteratorAggregate
 {
-
     /**
      * @param array<DomainEvent> $domainEvents
      */
@@ -33,7 +32,9 @@ final class DomainEvents implements IteratorAggregate
     }
 
     /**
-     * @return array<mixed>
+     * @template S
+     * @param Closure(DomainEvent): S $callback
+     * @return array<S>
      */
     public function map(Closure $callback): array
     {
