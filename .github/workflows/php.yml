@@ -64,22 +64,22 @@ jobs:
       run: composer install --prefer-dist --no-progress
 
     - name: Static Analysis (PHPStan)
-      run: composer run-script test-phpstan
+      run: composer run-script test:phpstan
 
     - name: Static Analysis (Code Sniffer)
-      run: composer run-script test-cs
+      run: composer run-script test:cs
 
     - name: Consistency tests (SQLite)
-      run: composer run-script test-consistency
+      run: composer run-script test:consistency
       env:
         DCB_TEST_DSN: "pdo-sqlite:///events.sqlite"
 
     - name: Consistency tests (MySQL)
-      run: composer run-script test-consistency
+      run: composer run-script test:consistency
       env:
         DCB_TEST_DSN: "pdo-mysql://root:password@127.0.0.1:${{ job.services.mysql.ports['3306'] }}/dcb"
 
     - name: Consistency tests (PostgreSQL)
-      run: composer run-script test-consistency
+      run: composer run-script test:consistency
       env:
         DCB_TEST_DSN: "pdo-pgsql://root:password@127.0.0.1:${{ job.services.postgres.ports['5432'] }}/dcb"
