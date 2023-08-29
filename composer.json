@@ -21,7 +21,7 @@
   ],
   "require": {
     "php": ">=8.1",
-    "wwwision/dcb-eventstore": "*"
+    "wwwision/dcb-eventstore": "^3"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
