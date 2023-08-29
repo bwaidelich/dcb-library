@@ -1,7 +1,7 @@
 {
   "name": "wwwision/dcb-library",
-  "description": "",
-  "type": "project",
+  "description": "Higher level interfaces and implementations for DCB based applications",
+  "type": "library",
   "license": "MIT",
   "authors": [
     {
@@ -40,14 +40,14 @@
     }
   },
   "scripts": {
-    "test-phpstan": "phpstan",
-    "test-cs": "phpcs --colors --standard=PSR12 --exclude=Generic.Files.LineLength src",
-    "test-cs:fix": "phpcbf --colors --standard=PSR12 --exclude=Generic.Files.LineLength src",
-    "test-unit": "phpunit tests",
+    "test:phpstan": "phpstan",
+    "test:cs": "phpcs --colors --standard=PSR12 --exclude=Generic.Files.LineLength src",
+    "test:cs:fix": "phpcbf --colors --standard=PSR12 --exclude=Generic.Files.LineLength src",
+    "test:unit": "phpunit tests",
     "test": [
-      "@test-phpstan",
-      "@test-cs",
-      "@test-unit"
+      "@test:phpstan",
+      "@test:cs",
+      "@test:unit"
     ]
   }
 }
