@@ -13,10 +13,12 @@ use Wwwision\DCBLibrary\CatchUpOptions;
 use Wwwision\DCBLibrary\CheckpointStorage;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventSerializer;
+use Wwwision\DCBLibrary\EventTypesAware;
 use Wwwision\DCBLibrary\Projection\PartitionedProjection;
 use Wwwision\DCBLibrary\ProvidesReset;
 use Wwwision\DCBLibrary\ProvidesSetup;
 use Wwwision\DCBLibrary\StreamQueryAware;
+use Wwwision\DCBLibrary\TagsAware;
 
 /**
  * @template S
@@ -83,6 +85,12 @@ final class ProjectionEventHandler implements EventHandler, ProvidesSetup, Provi
 
     private function handle(DomainEvent $domainEvent, EventEnvelope $eventEnvelope): void
     {
+        if ($this->projection instanceof EventTypesAware && !$this->projection->eventTypes()->contain($eventEnvelope->event->type)) {
+            return;
+        }
+        if ($this->projection instanceof TagsAware && !$domainEvent->tags()->containEvery($this->projection->tags())) {
+            return;
+        }
         $partitionKey = $this->projection->partitionKey($domainEvent);
         if (!array_key_exists($partitionKey, $this->statesByPartitionKey)) {
             $this->statesByPartitionKey[$partitionKey] = $this->projection->loadState($partitionKey);
