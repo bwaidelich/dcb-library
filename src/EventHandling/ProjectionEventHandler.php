@@ -15,6 +15,7 @@ use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventSerializer;
 use Wwwision\DCBLibrary\EventTypesAware;
 use Wwwision\DCBLibrary\Projection\PartitionedProjection;
+use Wwwision\DCBLibrary\Projection\Projection;
 use Wwwision\DCBLibrary\ProvidesReset;
 use Wwwision\DCBLibrary\ProvidesSetup;
 use Wwwision\DCBLibrary\StreamQueryAware;
@@ -34,7 +35,7 @@ final class ProjectionEventHandler implements EventHandler, ProvidesSetup, Provi
      * @param PartitionedProjection<S> $projection
      */
     public function __construct(
-        private readonly PartitionedProjection $projection,
+        private readonly Projection $projection,
         private readonly CheckpointStorage $checkpointStorage,
         private readonly EventSerializer $eventSerializer,
     ) {
@@ -91,19 +92,21 @@ final class ProjectionEventHandler implements EventHandler, ProvidesSetup, Provi
         if ($this->projection instanceof TagsAware && !$domainEvent->tags()->containEvery($this->projection->tags())) {
             return;
         }
-        $partitionKey = $this->projection->partitionKey($domainEvent);
+        $partitionKey = $this->projection instanceof PartitionedProjection ? $this->projection->partitionKey($domainEvent) : '.';
         if (!array_key_exists($partitionKey, $this->statesByPartitionKey)) {
-            $this->statesByPartitionKey[$partitionKey] = $this->projection->loadState($partitionKey);
+            $this->statesByPartitionKey[$partitionKey] = $this->projection instanceof PartitionedProjection ? $this->projection->loadState($partitionKey) : $this->projection->initialState();
         }
         $this->statesByPartitionKey[$partitionKey] = $this->projection->apply($this->statesByPartitionKey[$partitionKey], $domainEvent, $eventEnvelope);
     }
 
     private function finishCatchUp(SequenceNumber $sequenceNumber): void
     {
-        $this->checkpointStorage->updateAndReleaseLock($sequenceNumber);
-        foreach ($this->statesByPartitionKey as $state) {
-            $this->projection->saveState($state);
+        if ($this->projection instanceof PartitionedProjection) {
+            foreach ($this->statesByPartitionKey as $state) {
+                $this->projection->saveState($state);
+            }
         }
+        $this->checkpointStorage->updateAndReleaseLock($sequenceNumber);
         $this->statesByPartitionKey = [];
     }
 
