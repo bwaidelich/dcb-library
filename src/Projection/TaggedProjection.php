@@ -5,25 +5,21 @@ declare(strict_types=1);
 namespace Wwwision\DCBLibrary\Projection;
 
 use Wwwision\DCBEventStore\Types\EventEnvelope;
-use Wwwision\DCBEventStore\Types\EventTypes;
-use Wwwision\DCBEventStore\Types\StreamQuery\Criteria\EventTypesAndTagsCriterion;
+use Wwwision\DCBEventStore\Types\StreamQuery\Criteria;
 use Wwwision\DCBEventStore\Types\StreamQuery\Criteria\TagsCriterion;
-use Wwwision\DCBEventStore\Types\StreamQuery\StreamQuery;
 use Wwwision\DCBEventStore\Types\Tag;
 use Wwwision\DCBEventStore\Types\Tags;
 use Wwwision\DCBLibrary\DomainEvent;
-use Wwwision\DCBLibrary\EventTypesAware;
-use Wwwision\DCBLibrary\StreamQueryAware;
-use Wwwision\DCBLibrary\TagsAware;
+use Wwwision\DCBLibrary\StreamCriteriaAware;
 
 /**
  * @template S
  * @implements Projection<S>
  */
-final class TaggedProjection implements Projection, StreamQueryAware, EventTypesAware, TagsAware
+final class TaggedProjection implements Projection, StreamCriteriaAware
 {
     /**
-     * @param ClosureProjection<S> $wrapped
+     * @param Projection<S> $wrapped
      */
     private function __construct(
         private readonly Tags $tags,
@@ -65,21 +61,13 @@ final class TaggedProjection implements Projection, StreamQueryAware, EventTypes
         return $this->wrapped->apply($state, $domainEvent, $eventEnvelope);
     }
 
-    public function adjustStreamQuery(StreamQuery $query): StreamQuery
+    public function getCriteria(): Criteria
     {
-        if ($this->wrapped instanceof EventTypesAware) {
-            return $query->withCriterion(new EventTypesAndTagsCriterion($this->wrapped->eventTypes(), $this->tags));
+        if ($this->wrapped instanceof StreamCriteriaAware) {
+            $criteria = $this->wrapped->getCriteria();
+        } else {
+            $criteria = Criteria::create();
         }
-        return $query->withCriterion(new TagsCriterion($this->tags));
-    }
-
-    public function eventTypes(): EventTypes
-    {
-        return $this->wrapped->eventTypes();
-    }
-
-    public function tags(): Tags
-    {
-        return $this->tags;
+        return $criteria->with(Criteria\EventTypesAndTagsCriterion::create(tags: $this->tags));
     }
 }

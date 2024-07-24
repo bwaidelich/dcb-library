@@ -6,19 +6,26 @@ namespace Wwwision\DCBLibrary;
 
 use Closure;
 use Wwwision\DCBEventStore\EventStore;
+use Wwwision\DCBEventStore\Setupable;
 use Wwwision\DCBEventStore\Types\AppendCondition;
 use Wwwision\DCBEventStore\Types\Events;
 use Wwwision\DCBEventStore\Types\ExpectedHighestSequenceNumber;
 use Wwwision\DCBEventStore\Types\StreamQuery\StreamQuery;
 use Wwwision\DCBLibrary\Projection\Projection;
 
-final class EventPublisher
+final class DomainEventStore implements ProvidesSetup
 {
     public function __construct(
         private readonly EventStore $eventStore,
         private readonly EventSerializer $eventSerializer,
-        private readonly CatchUpQueue $catchUpQueue,
     ) {
+    }
+
+    public function setup(): void
+    {
+        if ($this->eventStore instanceof Setupable) {
+            $this->eventStore->setup();
+        }
     }
 
     /**
@@ -30,8 +37,8 @@ final class EventPublisher
     public function conditionalAppend(Projection $projection, Closure $eventProducer): void
     {
         $query = StreamQuery::wildcard();
-        if ($projection instanceof StreamQueryAware) {
-            $query = $projection->adjustStreamQuery($query);
+        if ($projection instanceof StreamCriteriaAware) {
+            $query = $query->withCriteria($projection->getCriteria());
         }
         $expectedHighestSequenceNumber = ExpectedHighestSequenceNumber::none();
         $state = $projection->initialState();
@@ -46,6 +53,5 @@ final class EventPublisher
         }
         $events = Events::fromArray($domainEvents->map($this->eventSerializer->convertDomainEvent(...)));
         $this->eventStore->append($events, new AppendCondition($query, $expectedHighestSequenceNumber));
-        $this->catchUpQueue->run();
     }
 }

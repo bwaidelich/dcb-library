@@ -6,14 +6,15 @@ namespace Wwwision\DCBLibrary\Projection;
 
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBEventStore\Types\EventTypes;
+use Wwwision\DCBEventStore\Types\StreamQuery\Criteria;
 use Wwwision\DCBLibrary\DomainEvent;
-use Wwwision\DCBLibrary\EventTypesAware;
+use Wwwision\DCBLibrary\StreamCriteriaAware;
 
 /**
  * @template S
  * @implements Projection<S>
  */
-final class ClosureProjection implements Projection, EventTypesAware
+final class ClosureProjection implements Projection, StreamCriteriaAware
 {
     /**
      * @param S $initialState
@@ -22,6 +23,7 @@ final class ClosureProjection implements Projection, EventTypesAware
     private function __construct(
         private readonly mixed $initialState,
         public readonly array $handlers,
+        public readonly bool $onlyLastEvent,
     ) {
     }
 
@@ -30,9 +32,9 @@ final class ClosureProjection implements Projection, EventTypesAware
      * @param PS $initialState
      * @return self<PS>
      */
-    public static function create(mixed $initialState): self
+    public static function create(mixed $initialState, bool $onlyLastEvent = false): self
     {
-        return new self($initialState, []);
+        return new self($initialState, [], $onlyLastEvent);
     }
 
     /**
@@ -43,12 +45,7 @@ final class ClosureProjection implements Projection, EventTypesAware
      */
     public function when(string $class, callable $cb): self
     {
-        return new self($this->initialState, [...$this->handlers, $class => $cb]);
-    }
-
-    public function eventTypes(): EventTypes
-    {
-        return EventTypes::fromStrings(...array_map(static fn($domainEventClassName) => substr($domainEventClassName, strrpos($domainEventClassName, '\\') + 1), array_keys($this->handlers)));
+        return new self($this->initialState, [...$this->handlers, $class => $cb], $this->onlyLastEvent);
     }
 
     /**
@@ -69,5 +66,11 @@ final class ClosureProjection implements Projection, EventTypesAware
             return $state;
         }
         return $this->handlers[$domainEvent::class]($state, $domainEvent, $eventEnvelope);
+    }
+
+    public function getCriteria(): Criteria
+    {
+        $eventTypes = EventTypes::fromStrings(...array_map(static fn($domainEventClassName) => substr($domainEventClassName, strrpos($domainEventClassName, '\\') + 1), array_keys($this->handlers)));
+        return Criteria::create(Criteria\EventTypesAndTagsCriterion::create(eventTypes: $eventTypes, onlyLastEvent: $this->onlyLastEvent));
     }
 }

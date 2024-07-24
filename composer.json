@@ -21,8 +21,10 @@
   ],
   "require": {
     "php": ">=8.1",
-    "wwwision/dcb-eventstore": "^3",
-    "wwwision/types": "^1"
+    "wwwision/dcb-eventstore": "dev-main as 3.2.0",
+    "wwwision/types": "^1",
+    "symfony/lock": "^6 || ^7",
+    "psr/log": "^1 || ^2 || ^3"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
