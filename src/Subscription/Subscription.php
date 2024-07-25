@@ -16,6 +16,7 @@ final class Subscription
         public readonly RunMode $runMode,
         public readonly Status $status,
         public readonly SequenceNumber $position,
+        public readonly bool $locked = false,
         public readonly SubscriptionError|null $error = null,
         public readonly int $retryAttempt = 0,
         public readonly DateTimeImmutable|null $lastSavedAt = null,
@@ -47,6 +48,7 @@ final class Subscription
             $this->runMode,
             $status ?? $this->status,
             $position ?? $this->position,
+            $this->locked,
             $this->error,
             $retryAttempt ?? $this->retryAttempt,
             $this->lastSavedAt,
@@ -66,23 +68,10 @@ final class Subscription
             $this->runMode,
             Status::ERROR,
             $this->position,
+            $this->locked,
             $error,
             $this->retryAttempt,
             $this->lastSavedAt,
-        );
-    }
-
-    public function withLastSavedAt(DateTimeImmutable $lastSavedAt): self
-    {
-        return new self(
-            $this->id,
-            $this->group,
-            $this->runMode,
-            $this->status,
-            $this->position,
-            $this->error,
-            $this->retryAttempt,
-            $lastSavedAt,
         );
     }
 //
@@ -104,6 +93,7 @@ final class Subscription
             $this->runMode,
             $this->status,
             $this->position,
+            $this->locked,
             null,
             $this->retryAttempt,
             $this->lastSavedAt,

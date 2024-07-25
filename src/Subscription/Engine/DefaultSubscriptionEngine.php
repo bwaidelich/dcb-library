@@ -11,27 +11,25 @@ use Wwwision\DCBEventStore\Types\ReadOptions;
 use Wwwision\DCBEventStore\Types\SequenceNumber;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventSerializer;
-use Wwwision\DCBLibrary\Exceptions\AlreadyProcessingException;
 use Wwwision\DCBLibrary\ProvidesSetup;
+use Wwwision\DCBLibrary\Subscription\RetryStrategy\RetryStrategy;
 use Wwwision\DCBLibrary\Subscription\RunMode;
 use Wwwision\DCBLibrary\Subscription\Status;
 use Wwwision\DCBLibrary\Subscription\Store\SubscriptionCriteria;
 use Wwwision\DCBLibrary\Subscription\Store\SubscriptionStore;
 use Wwwision\DCBLibrary\Subscription\Subscriber\Subscribers;
 use Wwwision\DCBLibrary\Subscription\Subscription;
-use Wwwision\DCBLibrary\Subscription\SubscriptionId;
 use Wwwision\DCBLibrary\Subscription\Subscriptions;
 
 final class DefaultSubscriptionEngine implements SubscriptionEngine
 {
-
-    private bool $processing = false;
 
     public function __construct(
         private readonly EventStore $eventStore,
         private readonly SubscriptionStore $subscriptionStore,
         private readonly Subscribers $subscribers,
         private readonly EventSerializer $eventSerializer,
+        private readonly RetryStrategy $retryStrategy,
         private readonly LoggerInterface|null $logger = null,
     ) {
     }
@@ -40,25 +38,13 @@ final class DefaultSubscriptionEngine implements SubscriptionEngine
         SubscriptionEngineCriteria $criteria = null,
         int $limit = null,
     ): void {
-        if ($this->processing) {
-            throw new AlreadyProcessingException();
-        }
         $criteria ??= SubscriptionEngineCriteria::noConstraints();
-        // TODO acquire lock
-        $this->processing = true;
-
         $subscriptionCriteria = SubscriptionCriteria::create(
             ids: $criteria->ids,
             groups: $criteria->groups,
-            status: [Status::NEW]
+            status: [Status::NEW],
         );
-
-        try {
-            $this->runInternal($subscriptionCriteria, 'setup', $limit);
-        } finally {
-            $this->processing = false;
-            // TODO release lock
-        }
+        $this->runInternal($subscriptionCriteria, 'setup', $limit);
     }
 
 
@@ -66,24 +52,33 @@ final class DefaultSubscriptionEngine implements SubscriptionEngine
         SubscriptionEngineCriteria $criteria = null,
         int $limit = null,
     ): void {
-        if ($this->processing) {
-            throw new AlreadyProcessingException();
-        }
         $criteria ??= SubscriptionEngineCriteria::noConstraints();
-        // TODO acquire lock
-        $this->processing = true;
 
         $subscriptionCriteria = SubscriptionCriteria::create(
             ids: $criteria->ids,
             groups: $criteria->groups,
-            status: [Status::ACTIVE]
+            status: [Status::ACTIVE],
         );
+        $this->runInternal($subscriptionCriteria, 'run', $limit);
+    }
 
-        try {
-            $this->runInternal($subscriptionCriteria, 'run', $limit);
-        } finally {
-            $this->processing = false;
-            // TODO release lock
+    private function lockSubscriptions(Subscriptions $subscriptions): void
+    {
+        foreach ($subscriptions as $subscription) {
+            $sT = microtime(true);
+            while (!$this->subscriptionStore->acquireLock($subscription->id)) {
+                if (microtime(true) - $sT > 5) {
+                    // TODO better exception handling
+                    throw new \RuntimeException(sprintf('Failed to acquire lock for subscription "%s"', $subscription->id->value), 1721895494);
+                }
+            }
+        }
+    }
+
+    private function releaseSubscriptions(Subscriptions $subscriptions): void
+    {
+        foreach ($subscriptions as $subscription) {
+            $this->subscriptionStore->releaseLock($subscription->id);
         }
     }
 
@@ -91,13 +86,16 @@ final class DefaultSubscriptionEngine implements SubscriptionEngine
     {
         $this->logger?->info(sprintf('Subscription Engine: %s: Start.', $process));
         $this->discoverNewSubscriptions();
-        // TODO $this->discoverDetachedSubscriptions($criteria);
-        // TODO $this->retrySubscriptions($criteria);
+        //$this->discoverDetachedSubscriptions($criteria);
+        $this->retrySubscriptions($criteria);
         $subscriptions = $this->subscriptionStore->findByCriteria($criteria);
         if ($subscriptions->isEmpty()) {
             $this->logger?->info(sprintf('Subscription Engine: %s: No subscriptions to process, finishing', $process));
             return;// new ProcessedResult(0, true);
         }
+
+        $this->lockSubscriptions($subscriptions);
+
         $startSequenceNumber = $this->lowestSubscriptionPosition($subscriptions)->next();
         $this->logger?->debug(
             sprintf(
@@ -151,6 +149,7 @@ final class DefaultSubscriptionEngine implements SubscriptionEngine
                         $limit,
                     ),
                 );
+                $this->releaseSubscriptions($subscriptions);
 
                 return;// new ProcessedResult($messageCounter, false, $errors);
             }
@@ -179,6 +178,7 @@ final class DefaultSubscriptionEngine implements SubscriptionEngine
                 $lastSequenceNumber?->value ?: $startSequenceNumber->value,
             ),
         );
+        $this->releaseSubscriptions($subscriptions);
 
         return;// new ProcessedResult($messageCounter, true, $errors);
     }
@@ -252,6 +252,47 @@ final class DefaultSubscriptionEngine implements SubscriptionEngine
             );
         }
     }
+
+    private function retrySubscriptions(SubscriptionCriteria $criteria): void
+    {
+        $failedSubscriptions = $this->subscriptionStore->findByCriteria(
+            SubscriptionCriteria::create(
+                ids: $criteria->ids,
+                groups: $criteria->groups,
+                status: [Status::ERROR],
+            )
+        );
+        foreach ($failedSubscriptions as $subscription) {
+            if ($subscription->error === null) {
+                continue;
+            }
+            $retryable = in_array(
+                $subscription->error->previousStatus,
+                [Status::NEW, Status::BOOTING, Status::ACTIVE],
+                true,
+            );
+            if (!$retryable) {
+                continue;
+            }
+            if (!$this->retryStrategy->shouldRetry($subscription)) {
+                continue;
+            }
+            $this->subscriptionStore->update($subscription->id, static fn(Subscription $subscription) => $subscription->with(
+                status: $subscription->error->previousStatus,
+                retryAttempt: $subscription->retryAttempt + 1,
+            )->withoutError());
+
+            $this->logger?->info(
+                sprintf(
+                    'Subscription Engine: Retry subscription "%s" (%d) and set back to %s.',
+                    $subscription->id->value,
+                    $subscription->retryAttempt + 1,
+                    $subscription->error->previousStatus->name,
+                ),
+            );
+        }
+    }
+
 
     private function lastSequenceNumber(): SequenceNumber
     {

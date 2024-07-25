@@ -16,6 +16,10 @@ interface SubscriptionStore
 
     public function findByCriteria(SubscriptionCriteria $criteria): Subscriptions;
 
+    public function acquireLock(SubscriptionId $subscriptionId): bool;
+
+    public function releaseLock(SubscriptionId $subscriptionId): void;
+
     public function add(Subscription $subscription): void;
 
     /**
