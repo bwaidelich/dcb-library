@@ -54,10 +54,15 @@ final class Subscribers implements IteratorAggregate, Countable, JsonSerializabl
      */
     public function get(SubscriptionId $id): Subscriber
     {
-        if (!array_key_exists($id->value, $this->subscribersById)) {
+        if (!$this->contain($id)) {
             throw SubscriberNotFoundException::forSubscriptionId($id);
         }
         return $this->subscribersById[$id->value];
+    }
+
+    public function contain(SubscriptionId $id): bool
+    {
+        return array_key_exists($id->value, $this->subscribersById);
     }
 
     public function getIterator(): Traversable

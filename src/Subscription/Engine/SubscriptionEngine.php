@@ -86,7 +86,7 @@ final class SubscriptionEngine
     {
         $this->logger?->info(sprintf('Subscription Engine: %s: Start.', $process));
         $this->discoverNewSubscriptions();
-        //$this->discoverDetachedSubscriptions($criteria);
+        $this->discoverDetachedSubscriptions($criteria);
         $this->retrySubscriptions($criteria);
         $subscriptions = $this->subscriptionStore->findByCriteria($criteria);
         if ($subscriptions->isEmpty()) {
@@ -250,6 +250,29 @@ final class SubscriptionEngine
                 sprintf(
                     'Subscription Engine: New Subscriber "%s" was found and added to the subscription store.',
                     $subscriber->id->value,
+                ),
+            );
+        }
+    }
+
+    private function discoverDetachedSubscriptions(SubscriptionCriteria $criteria): void
+    {
+        $registeredSubscriptions = $this->subscriptionStore->findByCriteria(SubscriptionCriteria::create(
+            $criteria->ids,
+            $criteria->groups,
+            [Status::ACTIVE, Status::PAUSED, Status::FINISHED],
+        ));
+        foreach ($registeredSubscriptions as $subscription) {
+            if ($this->subscribers->contain($subscription->id)) {
+                continue;
+            }
+            $this->subscriptionStore->update($subscription->id, fn(Subscription $subscription) => $subscription->with(
+                status: Status::DETACHED,
+            ));
+            $this->logger?->info(
+                sprintf(
+                    'Subscription Engine: Subscriber for "%s" not found and has been marked as detached.',
+                    $subscription->id->value,
                 ),
             );
         }
