@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\Subscription;
 
+use Closure;
 use Countable;
+use InvalidArgumentException;
 use IteratorAggregate;
 use JsonSerializable;
 use Traversable;
@@ -62,6 +64,63 @@ final class Subscriptions implements IteratorAggregate, Countable, JsonSerializa
             }
         }
         return false;
+    }
+
+    public function get(SubscriptionId $subscriptionId): Subscription
+    {
+        foreach ($this->items as $item) {
+            if ($item->id->equals($subscriptionId)) {
+                return $item;
+            }
+        }
+        throw new InvalidArgumentException(sprintf('Subscription with id "%s" not part of this set', $subscriptionId->value), 1723567808);
+    }
+
+    public function without(SubscriptionId $subscriptionId): self
+    {
+        return $this->filter(static fn (Subscription $subscription) => !$subscription->id->equals($subscriptionId));
+    }
+
+    /**
+     * @param Closure(Subscription): bool $callback
+     */
+    public function filter(Closure $callback): self
+    {
+        return self::fromArray(array_filter($this->items, $callback));
+    }
+
+    /**
+     * @template T
+     * @param Closure(Subscription): T $callback
+     * @return array<T>
+     */
+    public function map(Closure $callback): array
+    {
+        return array_map($callback, $this->items);
+    }
+
+    public function withAdded(Subscription $subscription): self
+    {
+        if ($this->contain($subscription->id)) {
+            throw new InvalidArgumentException(sprintf('Subscription with id "%s" is already part of this set', $subscription->id->value), 1723568258);
+        }
+        return new self([...$this->items, $subscription]);
+    }
+
+    public function withReplaced(SubscriptionId $subscriptionId, Subscription $subscription): self
+    {
+        if (!$this->contain($subscription->id)) {
+            throw new InvalidArgumentException(sprintf('Subscription with id "%s" is not part of this set', $subscription->id->value), 1723568412);
+        }
+        $newItems = [];
+        foreach ($this->items as $item) {
+            if ($item->id->equals($subscriptionId)) {
+                $newItems[] = $subscription;
+            } else {
+                $newItems[] = $item;
+            }
+        }
+        return new self($newItems);
     }
 
     /**

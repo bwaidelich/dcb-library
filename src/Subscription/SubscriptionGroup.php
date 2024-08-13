@@ -24,5 +24,4 @@ final class SubscriptionGroup
     {
         return $other->value === $this->value;
     }
-
 }

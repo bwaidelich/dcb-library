@@ -24,5 +24,4 @@ final class SubscriptionId
     {
         return $other->value === $this->value;
     }
-
 }

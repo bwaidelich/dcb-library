@@ -49,12 +49,22 @@ final class SubscriptionGroups implements IteratorAggregate, Countable, JsonSeri
         return count($this->items);
     }
 
+    public function contain(SubscriptionGroup $group): bool
+    {
+        foreach ($this->items as $item) {
+            if ($item->equals($group)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * @return array<string>
      */
     public function toStringArray(): array
     {
-        return array_map(fn (SubscriptionGroup $group) => $group->value, $this->items);
+        return array_map(static fn (SubscriptionGroup $group) => $group->value, $this->items);
     }
 
     public function jsonSerialize(): mixed

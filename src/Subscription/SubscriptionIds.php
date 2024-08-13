@@ -49,6 +49,27 @@ final class SubscriptionIds implements IteratorAggregate, Countable, JsonSeriali
         return count($this->items);
     }
 
+    public function contain(SubscriptionId $id): bool
+    {
+        foreach ($this->items as $item) {
+            if ($item->equals($id)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return array<string>
+     */
+    public function toStringArray(): array
+    {
+        return array_map(static fn (SubscriptionId $id) => $id->value, $this->items);
+    }
+
+    /**
+     * @return iterable<mixed>
+     */
     public function jsonSerialize(): iterable
     {
         return array_values($this->items);

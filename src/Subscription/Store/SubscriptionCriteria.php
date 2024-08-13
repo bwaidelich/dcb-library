@@ -9,7 +9,6 @@ use Wwwision\DCBLibrary\Subscription\SubscriptionGroups;
 use Wwwision\DCBLibrary\Subscription\SubscriptionId;
 use Wwwision\DCBLibrary\Subscription\SubscriptionIds;
 
-/** @psalm-immutable */
 final class SubscriptionCriteria
 {
     /**
