@@ -45,13 +45,7 @@ final class ClockBasedRetryStrategy implements RetryStrategy
 
     private function calculateNextRetryDate(DateTimeImmutable $lastDate, int $attempt): DateTimeImmutable
     {
-        $nextDate = $lastDate->modify(sprintf('+%d seconds', $this->calculateDelay($attempt)));
-
-        if ($nextDate === false) {
-            throw new \RuntimeException('Could not calculate next retry date.', 1721897113);
-        }
-
-        return $nextDate;
+        return $lastDate->modify(sprintf('+%d seconds', $this->calculateDelay($attempt)));
     }
 
     private function calculateDelay(int $attempt): int
