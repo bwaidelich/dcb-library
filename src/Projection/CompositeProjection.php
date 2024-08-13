@@ -7,19 +7,17 @@ namespace Wwwision\DCBLibrary\Projection;
 use stdClass;
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBEventStore\Types\StreamQuery\Criteria;
-use Wwwision\DCBEventStore\Types\StreamQuery\StreamQuery;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\StreamCriteriaAware;
 
 /**
- * @template S of stdClass
+ * @template S of object
  * @implements Projection<S>
  */
 final class CompositeProjection implements Projection, StreamCriteriaAware
 {
     /**
-     * @template PS
-     * @param array<string, Projection<PS>> $projections
+     * @param array<string, Projection<mixed>> $projections
      */
     private function __construct(
         private readonly array $projections,
@@ -27,8 +25,7 @@ final class CompositeProjection implements Projection, StreamCriteriaAware
     }
 
     /**
-     * @template PS
-     * @param array<string, Projection<PS>> $projections
+     * @param array<string, Projection> $projections
      */
     public static function create(array $projections): self // @phpstan-ignore-line TODO fix
     {
@@ -39,7 +36,7 @@ final class CompositeProjection implements Projection, StreamCriteriaAware
     /**
      * @return S
      */
-    public function initialState(): stdClass
+    public function initialState(): object
     {
         $state = new stdClass();
         foreach ($this->projections as $projectionKey => $projection) {
@@ -52,7 +49,7 @@ final class CompositeProjection implements Projection, StreamCriteriaAware
      * @param S $state
      * @return S
      */
-    public function apply(mixed $state, DomainEvent $domainEvent, EventEnvelope $eventEnvelope): stdClass
+    public function apply(mixed $state, DomainEvent $domainEvent, EventEnvelope $eventEnvelope): object
     {
         foreach ($this->projections as $projectionKey => $projection) {
             if ($projection instanceof StreamCriteriaAware && !$projection->getCriteria()->hashes()->intersect($eventEnvelope->criterionHashes)) {
