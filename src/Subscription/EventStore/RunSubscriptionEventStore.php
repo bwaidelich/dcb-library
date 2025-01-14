@@ -7,6 +7,7 @@ namespace Wwwision\DCBLibrary\Subscription\EventStore;
 use Wwwision\DCBEventStore\EventStore;
 use Wwwision\DCBEventStore\EventStream;
 use Wwwision\DCBEventStore\Types\AppendCondition;
+use Wwwision\DCBEventStore\Types\Event;
 use Wwwision\DCBEventStore\Types\Events;
 use Wwwision\DCBEventStore\Types\ReadOptions;
 use Wwwision\DCBEventStore\Types\StreamQuery\StreamQuery;
@@ -30,10 +31,10 @@ final class RunSubscriptionEventStore implements EventStore
 
     public function readAll(?ReadOptions $options = null): EventStream
     {
-        return $this->eventStore->readAll($options);
+        return $this->eventStore->read(StreamQuery::wildcard(), $options);
     }
 
-    public function append(Events $events, AppendCondition $condition): void
+    public function append(Events|Event $events, AppendCondition $condition): void
     {
         $this->eventStore->append($events, $condition);
         $this->subscriptionEngine->run($this->criteria ?? SubscriptionEngineCriteria::noConstraints());

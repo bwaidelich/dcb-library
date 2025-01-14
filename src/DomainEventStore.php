@@ -38,7 +38,9 @@ final class DomainEventStore implements ProvidesSetup
     {
         $query = StreamQuery::wildcard();
         if ($projection instanceof StreamCriteriaAware) {
-            $query = $query->withCriteria($projection->getCriteria());
+            foreach ($projection->getCriteria() as $criterion) {
+                $query = $query->withCriterion($criterion);
+            }
         }
         $expectedHighestSequenceNumber = ExpectedHighestSequenceNumber::none();
         $state = $projection->initialState();

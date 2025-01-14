@@ -9,6 +9,7 @@ use Wwwision\DCBEventStore\EventStore;
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBEventStore\Types\ReadOptions;
 use Wwwision\DCBEventStore\Types\SequenceNumber;
+use Wwwision\DCBEventStore\Types\StreamQuery\StreamQuery;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventSerializer;
 use Wwwision\DCBLibrary\ProvidesSetup;
@@ -108,7 +109,7 @@ final class SubscriptionEngine
         /** @var list<Error> $errors */
         $errors = [];
         $messageCounter = 0;
-        $eventStream = $this->eventStore->readAll(ReadOptions::create(from: $startSequenceNumber));
+        $eventStream = $this->eventStore->read(StreamQuery::wildcard(), ReadOptions::create(from: $startSequenceNumber));
         $lastSequenceNumber = null;
         $subscriptionsToRun = $subscriptions;
         foreach ($eventStream as $eventEnvelope) {
@@ -322,7 +323,7 @@ final class SubscriptionEngine
 
     private function lastSequenceNumber(): SequenceNumber
     {
-        $events = $this->eventStore->readAll(ReadOptions::create(backwards: true));
+        $events = $this->eventStore->read(StreamQuery::wildcard(), ReadOptions::create(backwards: true));
         return $events->first()?->sequenceNumber ?? SequenceNumber::fromInteger(0);
     }
 
