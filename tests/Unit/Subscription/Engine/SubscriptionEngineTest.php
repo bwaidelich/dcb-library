@@ -4,24 +4,17 @@ declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\Tests\Unit\Subscription\Engine;
 
-use Closure;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Wwwision\DCBEventStore\EventStore;
 use Wwwision\DCBEventStore\Helpers\InMemoryEventStore;
-use Wwwision\DCBEventStore\Helpers\InMemoryEventStream;
 use Wwwision\DCBEventStore\Types\AppendCondition;
 use Wwwision\DCBEventStore\Types\Event;
-use Wwwision\DCBEventStore\Types\EventData;
 use Wwwision\DCBEventStore\Types\EventEnvelope;
-use Wwwision\DCBEventStore\Types\EventId;
-use Wwwision\DCBEventStore\Types\EventMetadata;
 use Wwwision\DCBEventStore\Types\Events;
-use Wwwision\DCBEventStore\Types\EventType;
 use Wwwision\DCBEventStore\Types\SequenceNumber;
-use Wwwision\DCBEventStore\Types\Tags;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventHandling\EventHandler;
 use Wwwision\DCBLibrary\EventSerializer;
@@ -30,7 +23,6 @@ use Wwwision\DCBLibrary\Subscription\RetryStrategy\RetryStrategy;
 use Wwwision\DCBLibrary\Subscription\RunMode;
 use Wwwision\DCBLibrary\Subscription\Status;
 use Wwwision\DCBLibrary\Subscription\Store\InMemorySubscriptionStore;
-use Wwwision\DCBLibrary\Subscription\Store\SubscriptionStore;
 use Wwwision\DCBLibrary\Subscription\Subscriber\Subscriber;
 use Wwwision\DCBLibrary\Subscription\Subscriber\Subscribers;
 use Wwwision\DCBLibrary\Subscription\Subscription;
@@ -52,10 +44,10 @@ final class SubscriptionEngineTest extends TestCase
         $this->eventStore = InMemoryEventStore::create();
         $this->eventStore->append(
             Events::fromArray([
-                new Event(EventId::fromString('e1'), EventType::fromString('EventType1'), EventData::fromString('{}'), Tags::single('foo', 'bar'), EventMetadata::none()),
-                new Event(EventId::fromString('e2'), EventType::fromString('EventType2'), EventData::fromString('{}'), Tags::single('foo', 'bar'), EventMetadata::none()),
-                new Event(EventId::fromString('e3'), EventType::fromString('EventType1'), EventData::fromString('{}'), Tags::single('foo', 'baz'), EventMetadata::none()),
-                new Event(EventId::fromString('e4'), EventType::fromString('EventType1'), EventData::fromString('{}'), Tags::single('bar', 'foos'), EventMetadata::none()),
+                Event::create('EventType1', '{}', ['foo:bar']),
+                Event::create('EventType2', '{}', ['foo:bar']),
+                Event::create('EventType1', '{}', ['foo:baz']),
+                Event::create('EventType1', '{}', ['bar:foos']),
             ]),
             AppendCondition::noConstraints(),
         );
@@ -80,11 +72,11 @@ final class SubscriptionEngineTest extends TestCase
     }
 
     private function buildSubscription(
-        string $id = null,
-        string $group = null,
-        RunMode $runMode = null,
-        Status $status = null,
-        int $position = null,
+        string|null $id = null,
+        string|null $group = null,
+        RunMode|null $runMode = null,
+        Status|null $status = null,
+        int|null $position = null,
     ): Subscription {
         $subscription = Subscription::create(
             id: SubscriptionId::fromString($id ?? 'some-id'),

@@ -52,10 +52,9 @@ final class CompositeProjection implements Projection, StreamCriteriaAware
     public function apply(mixed $state, DomainEvent $domainEvent, EventEnvelope $eventEnvelope): object
     {
         foreach ($this->projections as $projectionKey => $projection) {
-            if ($projection instanceof StreamCriteriaAware && !$projection->getCriteria()->hashes()->intersect($eventEnvelope->criterionHashes)) {
+            if ($projection instanceof StreamCriteriaAware && !$projection->getCriteria()->matchesEvent($eventEnvelope->event)) {
                 continue;
             }
-            #var_dump($eventEnvelope->event->type->value . ' for ' . $projectionKey . ' tags: ' . implode(', ', $eventEnvelope->event->tags->toSimpleArray()));
             $state->{$projectionKey} = $projection->apply($state->{$projectionKey}, $domainEvent, $eventEnvelope);
         }
         return $state;

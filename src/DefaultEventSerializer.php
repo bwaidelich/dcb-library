@@ -7,10 +7,6 @@ namespace Wwwision\DCBLibrary;
 use JsonException;
 use RuntimeException;
 use Wwwision\DCBEventStore\Types\Event;
-use Wwwision\DCBEventStore\Types\EventData;
-use Wwwision\DCBEventStore\Types\EventId;
-use Wwwision\DCBEventStore\Types\EventMetadata;
-use Wwwision\DCBEventStore\Types\EventType;
 use Wwwision\Types\Parser;
 
 final class DefaultEventSerializer implements EventSerializer
@@ -44,12 +40,10 @@ final class DefaultEventSerializer implements EventSerializer
         } catch (JsonException $e) {
             throw new RuntimeException(sprintf('Failed to JSON-encode event data: %s', $e->getMessage()), 1715009664, $e);
         }
-        return new Event(
-            EventId::create(),
-            EventType::fromString(substr($domainEvent::class, strrpos($domainEvent::class, '\\') + 1)),
-            EventData::fromString($payloadJson),
-            $domainEvent->tags(),
-            EventMetadata::none(),
+        return Event::create(
+            type: substr($domainEvent::class, strrpos($domainEvent::class, '\\') + 1),
+            data: $payloadJson,
+            tags: $domainEvent->tags(),
         );
     }
 }
