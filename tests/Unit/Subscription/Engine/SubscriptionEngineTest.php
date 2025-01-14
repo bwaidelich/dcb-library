@@ -72,11 +72,11 @@ final class SubscriptionEngineTest extends TestCase
     }
 
     private function buildSubscription(
-        string $id = null,
-        string $group = null,
-        RunMode $runMode = null,
-        Status $status = null,
-        int $position = null,
+        string|null $id = null,
+        string|null $group = null,
+        RunMode|null $runMode = null,
+        Status|null $status = null,
+        int|null $position = null,
     ): Subscription {
         $subscription = Subscription::create(
             id: SubscriptionId::fromString($id ?? 'some-id'),

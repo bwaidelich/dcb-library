@@ -27,9 +27,9 @@ final class SubscriptionCriteria
      * @param list<Status>|null $status
      */
     public static function create(
-        SubscriptionIds|array $ids = null,
-        SubscriptionGroups|array $groups = null,
-        array $status = null,
+        SubscriptionIds|array|null $ids = null,
+        SubscriptionGroups|array|null $groups = null,
+        array|null $status = null,
     ): self {
         if (is_array($ids)) {
             $ids = SubscriptionIds::fromArray($ids);

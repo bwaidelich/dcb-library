@@ -38,9 +38,9 @@ final class Subscription
     }
 
     public function with(
-        Status $status = null,
-        SequenceNumber $position = null,
-        int $retryAttempt = null,
+        Status|null $status = null,
+        SequenceNumber|null $position = null,
+        int|null $retryAttempt = null,
     ): self {
         return new self(
             $this->id,
@@ -74,17 +74,7 @@ final class Subscription
             $this->lastSavedAt,
         );
     }
-//
-//    public function doRetry(): void
-//    {
-//        if ($this->error === null) {
-//            throw new NoErrorToRetry();
-//        }
-//
-//        $this->retryAttempt++;
-//        $this->status = $this->error->previousStatus;
-//        $this->error = null;
-//    }
+
     public function withoutError(): self
     {
         return new self(

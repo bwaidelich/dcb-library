@@ -36,8 +36,8 @@ final class SubscriptionEngine
     }
 
     public function setup(
-        SubscriptionEngineCriteria $criteria = null,
-        int $limit = null,
+        SubscriptionEngineCriteria|null $criteria = null,
+        int|null $limit = null,
     ): void {
         $criteria ??= SubscriptionEngineCriteria::noConstraints();
         $subscriptionCriteria = SubscriptionCriteria::create(
@@ -50,8 +50,8 @@ final class SubscriptionEngine
 
 
     public function run(
-        SubscriptionEngineCriteria $criteria = null,
-        int $limit = null,
+        SubscriptionEngineCriteria|null $criteria = null,
+        int|null $limit = null,
     ): void {
         $criteria ??= SubscriptionEngineCriteria::noConstraints();
 
