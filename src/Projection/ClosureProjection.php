@@ -40,7 +40,7 @@ final class ClosureProjection implements Projection, StreamCriteriaAware
     /**
      * @template E of DomainEvent
      * @param class-string<E> $class
-     * @param callable(S, E): S $cb
+     * @param callable(S, E, EventEnvelope): S $cb
      * @return self<S>
      */
     public function when(string $class, callable $cb): self
