@@ -31,10 +31,9 @@ final class DomainEventStore implements ProvidesSetup
     /**
      * @template S
      * @param Projection<S> $projection
-     * @param Closure(S): (DomainEvent|DomainEvents) $eventProducer
-     * @return void
+     * @return DecisionModel<S>
      */
-    public function conditionalAppend(Projection $projection, Closure $eventProducer): void
+    public function buildDecisionModel(Projection $projection): DecisionModel
     {
         $query = StreamQuery::wildcard();
         if ($projection instanceof StreamCriteriaAware) {
@@ -49,11 +48,23 @@ final class DomainEventStore implements ProvidesSetup
             $state = $projection->apply($state, $domainEvent, $eventEnvelope);
             $expectedHighestSequenceNumber = ExpectedHighestSequenceNumber::fromSequenceNumber($eventEnvelope->sequenceNumber);
         }
-        $domainEvents = $eventProducer($state);
+        return new DecisionModel($query, $expectedHighestSequenceNumber, $state);
+    }
+
+    /**
+     * @template S
+     * @param Projection<S> $projection
+     * @param Closure(S): (DomainEvent|DomainEvents) $eventProducer
+     * @return void
+     */
+    public function conditionalAppend(Projection $projection, Closure $eventProducer): void
+    {
+        $decisionModel = $this->buildDecisionModel($projection);
+        $domainEvents = $eventProducer($decisionModel->state);
         if ($domainEvents instanceof DomainEvent) {
             $domainEvents = DomainEvents::create($domainEvents);
         }
         $events = Events::fromArray($domainEvents->map($this->eventSerializer->convertDomainEvent(...)));
-        $this->eventStore->append($events, new AppendCondition($query, $expectedHighestSequenceNumber));
+        $this->eventStore->append($events, new AppendCondition($decisionModel->query, $decisionModel->expectedHighestSequenceNumber));
     }
 }
