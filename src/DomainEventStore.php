@@ -51,6 +51,15 @@ final class DomainEventStore implements ProvidesSetup
         return new DecisionModel($query, $expectedHighestSequenceNumber, $state);
     }
 
+    public function append(DomainEvent|DomainEvents $domainEvents): void
+    {
+        if ($domainEvents instanceof DomainEvent) {
+            $domainEvents = DomainEvents::create($domainEvents);
+        }
+        $events = Events::fromArray($domainEvents->map($this->eventSerializer->convertDomainEvent(...)));
+        $this->eventStore->append($events, AppendCondition::noConstraints());
+    }
+
     /**
      * @template S
      * @param Projection<S> $projection
