@@ -6,7 +6,6 @@ namespace Wwwision\DCBLibrary\Projection;
 
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBEventStore\Types\StreamQuery\Criteria;
-use Wwwision\DCBEventStore\Types\StreamQuery\Criteria\TagsCriterion;
 use Wwwision\DCBEventStore\Types\Tag;
 use Wwwision\DCBEventStore\Types\Tags;
 use Wwwision\DCBLibrary\DomainEvent;

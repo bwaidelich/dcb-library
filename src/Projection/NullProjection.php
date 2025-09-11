@@ -14,12 +14,12 @@ use Wwwision\DCBLibrary\DomainEvent;
 final class NullProjection implements Projection
 {
 
-    public function initialState(): mixed
+    public function initialState(): null
     {
         return null;
     }
 
-    public function apply(mixed $state, DomainEvent $domainEvent, EventEnvelope $eventEnvelope): mixed
+    public function apply(mixed $state, DomainEvent $domainEvent, EventEnvelope $eventEnvelope): null
     {
         return null;
     }
