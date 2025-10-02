@@ -10,7 +10,7 @@ use Wwwision\SubscriptionEngine\Subscription\SubscriptionId;
 
 interface EventHandler
 {
-    public static function subscriptionId(): SubscriptionId;
+    public function subscriptionId(): SubscriptionId;
 
     public function handle(DomainEvent $domainEvent, EventEnvelope $eventEnvelope): void;
 }
