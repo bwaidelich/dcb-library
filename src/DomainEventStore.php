@@ -48,7 +48,7 @@ final class DomainEventStore implements ProvidesSetup
             throw new RuntimeException('Subscribers must not be registered after subscription engine was initialized!', 1757497337);
         }
         $this->subscribers[] = Subscriber::create(
-            id: $eventHandler::subscriptionId(),
+            id: $eventHandler->subscriptionId(),
             handler: fn (EventEnvelope $eventEnvelope) => $eventHandler->handle($this->eventSerializer->convertEvent($eventEnvelope->event), $eventEnvelope),
             runMode: $runMode,
             setup: $eventHandler instanceof ProvidesSetup ? $eventHandler->setup(...) : null,
