@@ -26,9 +26,10 @@
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
-    "phpstan/phpstan": "^1.10",
-    "squizlabs/php_codesniffer": "^4.0.x-dev",
-    "phpunit/phpunit": "^10.1"
+    "phpstan/phpstan": "^2",
+    "squizlabs/php_codesniffer": "^4",
+    "phpunit/phpunit": "^12",
+    "doctrine/dbal": "^3"
   },
   "autoload": {
     "psr-4": {
