@@ -62,8 +62,14 @@ final class DomainEventStore implements ProvidesSetup
             $this->eventStore->setup();
         }
         $subscriptionEngine = $this->subscriptionEngine();
-        $subscriptionEngine->setup();
-        $subscriptionEngine->boot();
+        $setupResult = $subscriptionEngine->setup();
+        if (!$setupResult->successful()) {
+            throw new RuntimeException(sprintf('Failed to set up subscription engine: %s', $setupResult->errors->getClampedMessage()), 1759670793);
+        }
+        $bootResult = $subscriptionEngine->boot();
+        if (!$bootResult->successful()) {
+            throw new RuntimeException(sprintf('Failed to boot subscription engine: %s', $bootResult->errors->getClampedMessage()), 1759670794);
+        }
     }
 
     /**
