@@ -15,6 +15,7 @@ use Wwwision\DCBEventStore\Types\ExpectedHighestSequenceNumber;
 use Wwwision\DCBEventStore\Types\StreamQuery\StreamQuery;
 use Wwwision\DCBLibrary\EventHandling\EventHandler;
 use Wwwision\DCBLibrary\Projection\Projection;
+use Wwwision\SubscriptionEngine\Engine\ProcessedResult;
 use Wwwision\SubscriptionEngine\Engine\SubscriptionEngineCriteria;
 use Wwwision\SubscriptionEngine\Store\SubscriptionStore;
 use Wwwision\SubscriptionEngine\Subscriber\Subscriber;
@@ -121,14 +122,14 @@ final class DomainEventStore implements ProvidesSetup
         $this->eventStore->append($events, new AppendCondition($decisionModel->query, $decisionModel->expectedHighestSequenceNumber));
     }
 
-    public function catchUpActiveSubscribers(): void
+    public function catchUpActiveSubscribers(): ProcessedResult
     {
-        $this->subscriptionEngine()->catchUpActive();
+        return $this->subscriptionEngine()->catchUpActive();
     }
 
-    public function catchUpSubscribers(SubscriptionId ...$subscriptionIds): void
+    public function catchUpSubscribers(SubscriptionId ...$subscriptionIds): ProcessedResult
     {
-        $this->subscriptionEngine()->catchUpActive(SubscriptionEngineCriteria::create($subscriptionIds));
+        return $this->subscriptionEngine()->catchUpActive(SubscriptionEngineCriteria::create($subscriptionIds));
     }
 
     /**
