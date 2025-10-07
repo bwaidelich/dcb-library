@@ -38,7 +38,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Wwwision\\DCBLibrary\\Tests\\": "tests/"
+      "Wwwision\\DCBLibrary\\PHPStanExtensions\\": "phpstan-extensions/"
     }
   },
   "scripts": {

@@ -1,0 +1,4 @@
+services:
+  - class: Wwwision\DCBLibrary\PHPStanExtensions\CompositeProjectorCreateReturnTypeExtension
+    tags:
+      - phpstan.broker.dynamicStaticMethodReturnTypeExtension
