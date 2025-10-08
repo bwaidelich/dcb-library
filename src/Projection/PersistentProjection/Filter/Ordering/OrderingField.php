@@ -7,7 +7,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Ordering;
 use InvalidArgumentException;
 use JsonSerializable;
 use ValueError;
-use Webmozart\Assert\Assert;
 
 final readonly class OrderingField implements JsonSerializable
 {
@@ -15,6 +14,9 @@ final readonly class OrderingField implements JsonSerializable
         public string|TimestampField $field,
         public OrderingDirection $direction,
     ) {
+        if ($field === '') {
+            throw new InvalidArgumentException('Field must not be empty');
+        }
     }
 
     public static function byProperty(string $propertyName, OrderingDirection $direction): self
@@ -32,8 +34,12 @@ final readonly class OrderingField implements JsonSerializable
      */
     public static function fromArray(array $array): self
     {
-        Assert::inArray($array['type'], ['propertyName', 'timestampField']);
-        Assert::string($array['field']);
+        if (!in_array($array['type'], ['propertyName', 'timestampField'], true)) {
+            throw new InvalidArgumentException('Invalid/missing "type"', 1759920113);
+        }
+        if (!is_string($array['field'])) {
+            throw new InvalidArgumentException('Invalid/missing "field"', 1759920169);
+        }
         $type = $array['type'];
         unset($array['type']);
         if ($type === 'propertyName') {
@@ -46,7 +52,9 @@ final readonly class OrderingField implements JsonSerializable
             }
         }
         unset($array['field']);
-        Assert::string($array['direction']);
+        if (!is_string($array['direction'])) {
+            throw new InvalidArgumentException('Invalid/missing "direction"', 1759920213);
+        }
         try {
             $direction = OrderingDirection::from($array['direction']);
         } catch (ValueError $e) {
