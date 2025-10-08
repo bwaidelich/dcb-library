@@ -92,13 +92,13 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
         );
     }
 
-    public function saveStateEnvelope(SerializedPersistentProjectionStateEnvelope $state): void
+    public function saveStateEnvelope(SerializedPersistentProjectionStateEnvelope $stateEnvelope): void
     {
         $this->connection->executeStatement('INSERT INTO ' . $this->connection->quoteIdentifier($this->tableName) . ' (partition_key, state, created_at, last_updated_at) VALUES (:partitionKey, :state, :createdAt, :lastUpdatedAt) ON DUPLICATE KEY UPDATE state = :state, last_updated_at = :lastUpdatedAt', [
-            'partitionKey' => $state->partitionKey,
-            'state' => $state->serializedState,
-            'createdAt' => $state->createdAt->format('Y-m-d H:i:s'),
-            'lastUpdatedAt' => $state->lastUpdatedAt->format('Y-m-d H:i:s'),
+            'partitionKey' => $stateEnvelope->partitionKey,
+            'state' => $stateEnvelope->serializedState,
+            'createdAt' => $stateEnvelope->createdAt->format('Y-m-d H:i:s'),
+            'lastUpdatedAt' => $stateEnvelope->lastUpdatedAt->format('Y-m-d H:i:s'),
         ]);
     }
 

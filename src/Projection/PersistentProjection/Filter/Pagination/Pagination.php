@@ -15,7 +15,7 @@ final readonly class Pagination
         if ($limit < 1) {
             throw new InvalidArgumentException(sprintf('Limit must not be less than 1, given: %d', $limit), 1759920247);
         }
-        if ($offset < 1) {
+        if ($offset < 0) {
             throw new InvalidArgumentException(sprintf('Offset must not be a negative number, given: %d', $this->offset), 1759920248);
         }
     }
