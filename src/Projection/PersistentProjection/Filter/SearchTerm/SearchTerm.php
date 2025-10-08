@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\SearchTerm;
 
-use Webmozart\Assert\Assert;
+use InvalidArgumentException;
 
 final readonly class SearchTerm
 {
 
     private function __construct(public string $term)
     {
-        Assert::notEmpty($term, 'SearchTerm cannot be empty');
+        if (empty($term)) {
+            throw new InvalidArgumentException('SearchTerm cannot be empty', 1759920399);
+        }
     }
 
     /**

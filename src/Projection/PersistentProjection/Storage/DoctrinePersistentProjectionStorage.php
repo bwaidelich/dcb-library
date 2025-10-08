@@ -16,7 +16,6 @@ use Doctrine\DBAL\Schema\Table;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\DBAL\Types\Types;
 use RuntimeException;
-use Webmozart\Assert\Assert;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\AndCriteria;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\NegateCriteria;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\OrCriteria;
@@ -51,7 +50,6 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
 
     public function loadStateEnvelope(string $partitionKey): SerializedPersistentProjectionStateEnvelope|null
     {
-        Assert::string($partitionKey);
         $row = $this->connection->fetchAssociative('SELECT * FROM ' . $this->connection->quoteIdentifier($this->tableName) . ' WHERE partition_key = :partitionKey', [
             'partitionKey' => $partitionKey,
         ]);
@@ -66,14 +64,26 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
      */
     private function convertRow(array $row): SerializedPersistentProjectionStateEnvelope
     {
-        Assert::string($row['partition_key']);
-        Assert::string($row['state']);
-        Assert::string($row['created_at']);
+        if (!is_string($row['partition_key'])) {
+            throw new RuntimeException('Missing/invalid value for column "partition_key"', 1759920465);
+        }
+        if (!is_string($row['state'])) {
+            throw new RuntimeException('Missing/invalid value for column "state"', 1759920466);
+        }
+        if (!is_string($row['created_at'])) {
+            throw new RuntimeException('Missing/invalid value for column "created_at"', 1759920467);
+        }
         $createdAt = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $row['created_at']);
-        Assert::isInstanceOf($createdAt, DateTimeImmutable::class);
-        Assert::string($row['last_updated_at']);
+        if ($createdAt === false) {
+            throw new RuntimeException(sprintf('Failed to convert "%s" to DateTime object', $row['created_at']), 1759920528);
+        }
+        if (!is_string($row['last_updated_at'])) {
+            throw new RuntimeException('Missing/invalid value for column "last_updated_at"', 1759920529);
+        }
         $lastUpdatedAt = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $row['last_updated_at']);
-        Assert::isInstanceOf($lastUpdatedAt, DateTimeImmutable::class);
+        if ($lastUpdatedAt === false) {
+            throw new RuntimeException(sprintf('Failed to convert "%s" to DateTime object', $row['last_updated_at']), 1759920530);
+        }
         return new SerializedPersistentProjectionStateEnvelope(
             $row['partition_key'],
             $row['state'],
@@ -104,7 +114,9 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
             $this->addSearchTermConstraints($queryBuilder, $filter->searchTerm);
         }
         $totalCountResult = $queryBuilder->executeQuery()->fetchOne();
-        Assert::numeric($totalCountResult);
+        if (!is_numeric($totalCountResult)) {
+            throw new RuntimeException(sprintf('Expected total count result to be numeric, got: %s', get_debug_type($totalCountResult)), 1759920594);
+        }
         $totalCount = (int)$totalCountResult;
         if ($totalCount === 0) {
             return SerializedPersistentProjectionFilterResult::createEmpty();
