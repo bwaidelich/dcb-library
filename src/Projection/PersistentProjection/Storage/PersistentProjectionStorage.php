@@ -14,6 +14,8 @@ interface PersistentProjectionStorage
 
     public function saveStateEnvelope(SerializedPersistentProjectionStateEnvelope $stateEnvelope): void;
 
+    public function removeStateEnvelope(string $partitionKey): void;
+
     public function find(PersistentProjectionFilter $filter): SerializedPersistentProjectionFilterResult;
 
     public function flush(): void;

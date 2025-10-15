@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Wwwision\DCBLibrary\Projection\PersistentProjection;
 
 use Closure;
+use RuntimeException;
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBLibrary\DomainEvent;
 use Wwwision\DCBLibrary\EventHandling\EventHandler;
@@ -17,6 +18,7 @@ use Wwwision\DCBLibrary\Projection\PersistentProjection\Storage\Serializer\Persi
 use Wwwision\DCBLibrary\Projection\Projection;
 use Wwwision\DCBLibrary\ProvidesReset;
 use Wwwision\DCBLibrary\ProvidesSetup;
+use Wwwision\DCBLibrary\StreamCriteriaAware;
 use Wwwision\SubscriptionEngine\Subscription\SubscriptionId;
 
 /**
@@ -69,19 +71,35 @@ final readonly class PersistentProjection implements EventHandler, ProvidesSetup
 
     public function handle(DomainEvent $domainEvent, EventEnvelope $eventEnvelope): void
     {
+        if ($this->projection instanceof StreamCriteriaAware && $this->projection->getCriteria()->matchesEvent($eventEnvelope->event)) {
+            return;
+        }
         $partitionKey = ($this->partitionKeyExtractor)($domainEvent, $eventEnvelope);
         if ($partitionKey === null) {
             return;
         }
-        $stateEnvelope = $this->storage->loadStateEnvelope($partitionKey) ?? SerializedPersistentProjectionStateEnvelope::create(
-            $partitionKey,
-            $this->serializer->serialize($this->projection->initialState()),
-            $eventEnvelope->recordedAt,
-        );
-        $state = $this->serializer->unserialize($stateEnvelope->serializedState);
+        $stateEnvelope = $this->storage->loadStateEnvelope($partitionKey);
+        if ($stateEnvelope === null) {
+            $state = $this->projection->initialState();
+        } else {
+            $state = $this->serializer->unserialize($stateEnvelope->serializedState);
+        }
         $state = $this->projection->apply($state, $domainEvent, $eventEnvelope);
+        if ($state === null) {
+            $this->storage->removeStateEnvelope($partitionKey);
+            return;
+        }
         $serializedState = $this->serializer->serialize($state);
-        $this->storage->saveStateEnvelope($stateEnvelope->withUpdatedState($serializedState, $eventEnvelope->recordedAt));
+        if ($stateEnvelope === null) {
+            $stateEnvelope = SerializedPersistentProjectionStateEnvelope::create(
+                $partitionKey,
+                $serializedState,
+                $eventEnvelope->recordedAt,
+            );
+        } else {
+            $stateEnvelope = $stateEnvelope->withUpdatedState($serializedState, $eventEnvelope->recordedAt);
+        }
+        $this->storage->saveStateEnvelope($stateEnvelope);
     }
 
     public function reset(): void

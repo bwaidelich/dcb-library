@@ -102,6 +102,11 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
         ]);
     }
 
+    public function removeStateEnvelope(string $partitionKey): void
+    {
+        $this->connection->delete($this->tableName, ['partition_key' => $partitionKey]);
+    }
+
     public function find(PersistentProjectionFilter $filter): SerializedPersistentProjectionFilterResult
     {
         $queryBuilder = $this->connection->createQueryBuilder()
