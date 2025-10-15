@@ -6,6 +6,7 @@ namespace Wwwision\DCBLibrary\Projection;
 
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBEventStore\Types\StreamQuery\Criteria;
+use Wwwision\DCBEventStore\Types\StreamQuery\Criteria\EventTypesAndTagsCriterion;
 use Wwwision\DCBEventStore\Types\Tag;
 use Wwwision\DCBEventStore\Types\Tags;
 use Wwwision\DCBLibrary\DomainEvent;
@@ -62,11 +63,11 @@ final class TaggedProjection implements Projection, StreamCriteriaAware
 
     public function getCriteria(): Criteria
     {
-        if ($this->wrapped instanceof StreamCriteriaAware) {
-            $criteria = $this->wrapped->getCriteria();
-        } else {
-            $criteria = Criteria::create();
+        if (!$this->wrapped instanceof StreamCriteriaAware || $this->wrapped->getCriteria()->isEmpty()) {
+            return Criteria::create(EventTypesAndTagsCriterion::create(tags: $this->tags));
         }
-        return $criteria->with(Criteria\EventTypesAndTagsCriterion::create(tags: $this->tags));
+        /** @var EventTypesAndTagsCriterion[] $criteria */
+        $criteria = $this->wrapped->getCriteria()->map(fn (EventTypesAndTagsCriterion $criterion) => $criterion->with(tags: $criterion->tags !== null ? $criterion->tags->merge($this->tags) : $this->tags));
+        return Criteria::fromArray($criteria);
     }
 }
