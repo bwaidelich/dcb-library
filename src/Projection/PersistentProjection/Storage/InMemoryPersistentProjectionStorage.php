@@ -42,6 +42,11 @@ final class InMemoryPersistentProjectionStorage implements PersistentProjectionS
         $this->stateEnvelopesByPartitionKey[$stateEnvelope->partitionKey] = $stateEnvelope;
     }
 
+    public function removeStateEnvelope(string $partitionKey): void
+    {
+        unset($this->stateEnvelopesByPartitionKey[$partitionKey]);
+    }
+
     public function find(PersistentProjectionFilter $filter): SerializedPersistentProjectionFilterResult
     {
         $filteredResults = array_filter($this->stateEnvelopesByPartitionKey, static fn (SerializedPersistentProjectionStateEnvelope $stateEnvelope) => self::matchesFilter($stateEnvelope, $filter));
