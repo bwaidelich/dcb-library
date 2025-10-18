@@ -71,7 +71,7 @@ final readonly class PersistentProjection implements EventHandler, ProvidesSetup
 
     public function handle(DomainEvent $domainEvent, EventEnvelope $eventEnvelope): void
     {
-        if ($this->projection instanceof StreamCriteriaAware && $this->projection->getCriteria()->matchesEvent($eventEnvelope->event)) {
+        if ($this->projection instanceof StreamCriteriaAware && !$this->projection->getCriteria()->matchesEvent($eventEnvelope->event)) {
             return;
         }
         $partitionKey = ($this->partitionKeyExtractor)($domainEvent, $eventEnvelope);
