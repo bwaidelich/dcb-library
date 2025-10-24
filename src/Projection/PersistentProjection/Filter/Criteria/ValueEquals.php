@@ -11,8 +11,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria;
  * Criteria that matches if a property is equal to "foo" ignoring the case (e.g. "Foo" and "FOO" would match as well)
  *     "stringProp =~ 'foo'"
  *
- * @see PropertyValueCriteriaParser
- * @api
  */
 final readonly class ValueEquals implements PersistentProjectionFilterCriteria
 {

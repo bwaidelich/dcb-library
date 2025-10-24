@@ -8,8 +8,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria;
  * Criteria that matches if a property is greater than or equal to the specified value
  *     "stringProp >= 'foo' OR intProp >= 123 OR floatProp >= 123.45"
  *
- * @see PropertyValueCriteriaParser
- * @api
  */
 final readonly class ValueGreaterThanOrEqual implements PersistentProjectionFilterCriteria
 {

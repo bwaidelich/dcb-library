@@ -11,8 +11,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria;
  * Criteria that matches if a property contains the specified string (case-insensitive)
  *      "prop1 *=~ 'foo'"
  *
- * @see PropertyValueCriteriaParser
- * @api
  */
 final readonly class ValueContains implements PersistentProjectionFilterCriteria
 {
