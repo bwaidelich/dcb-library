@@ -15,6 +15,7 @@ use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueEnd
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueEquals;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueGreaterThan;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueGreaterThanOrEqual;
+use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueIsNull;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueLessThan;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueLessThanOrEqual;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueStartsWith;
@@ -108,6 +109,7 @@ final class InMemoryPersistentProjectionStorage implements PersistentProjectionS
             ValueGreaterThanOrEqual::class => isset($state[$criteria->propertyName]) && $state[$criteria->propertyName] >= $criteria->value,
             ValueLessThan::class => isset($state[$criteria->propertyName]) && $state[$criteria->propertyName] < $criteria->value,
             ValueLessThanOrEqual::class => isset($state[$criteria->propertyName]) && $state[$criteria->propertyName] <= $criteria->value,
+            ValueIsNull::class => !isset($state[$criteria->propertyName]),
             default => throw new \InvalidArgumentException(sprintf('Invalid/unsupported value criteria "%s"', get_debug_type($criteria)), 1759922446),
         };
     }

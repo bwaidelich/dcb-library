@@ -25,6 +25,7 @@ use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueEnd
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueEquals;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueGreaterThan;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueGreaterThanOrEqual;
+use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueIsNull;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueLessThan;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueLessThanOrEqual;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueStartsWith;
@@ -155,6 +156,7 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
             ValueLessThan::class => $this->compareValueStatement($queryBuilder, $criteria->propertyName, $criteria->value, '<'),
             ValueLessThanOrEqual::class => $this->compareValueStatement($queryBuilder, $criteria->propertyName, $criteria->value, '<='),
             ValueStartsWith::class => $this->searchValueStatement($queryBuilder, $criteria->propertyName, $criteria->value . '%', $criteria->caseSensitive),
+            ValueIsNull::class => 'JSON_TYPE(' . $this->extractPropertyValue($criteria->propertyName) . ') = \'NULL\'',
             default => throw new \InvalidArgumentException(sprintf('Invalid/unsupported filter criteria "%s"', get_debug_type($criteria)), 1679561062),
         };
     }

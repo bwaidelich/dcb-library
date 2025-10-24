@@ -8,8 +8,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria;
  * Binary operation that disjunctively combines two criteria:
  *   "prop1 = 'foo' OR prop2 = 'bar'"
  *
- * @see PropertyValueCriteriaParser
- * @api
  */
 final readonly class OrCriteria implements PersistentProjectionFilterCriteria
 {

@@ -8,8 +8,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria;
  * Binary operation that conjunctively combines two criteria:
  *   "prop1 = 'foo' AND prop2 = 'bar'"
  *
- * @see PropertyValueCriteriaParser
- * @api
  */
 final readonly class AndCriteria implements PersistentProjectionFilterCriteria
 {

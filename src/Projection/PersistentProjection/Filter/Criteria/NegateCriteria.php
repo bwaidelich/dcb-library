@@ -10,8 +10,6 @@ namespace Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria;
  * Or:
  *   "prop1 != 'foo'"
  *
- * @see PropertyValueCriteriaParser
- * @api
  */
 final readonly class NegateCriteria implements PersistentProjectionFilterCriteria
 {
