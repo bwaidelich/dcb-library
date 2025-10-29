@@ -67,7 +67,11 @@ final class InMemoryPersistentProjectionStorage implements PersistentProjectionS
             });
         }
         if ($filter->pagination !== null) {
-            $filteredResults = array_slice($filteredResults, $filter->pagination->offset, $filter->pagination->limit);
+            if ($filter->pagination->offset >= $totalCount) {
+                $filteredResults = [];
+            } else {
+                $filteredResults = array_slice($filteredResults, $filter->pagination->offset, $filter->pagination->limit);
+            }
         }
         return SerializedPersistentProjectionFilterResult::create($totalCount, $filteredResults);
     }
