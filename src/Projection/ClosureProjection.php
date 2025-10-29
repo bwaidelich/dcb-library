@@ -7,7 +7,10 @@ namespace Wwwision\DCBLibrary\Projection;
 use Wwwision\DCBEventStore\Types\EventEnvelope;
 use Wwwision\DCBEventStore\Types\EventTypes;
 use Wwwision\DCBEventStore\Types\StreamQuery\Criteria;
+use Wwwision\DCBEventStore\Types\Tag;
+use Wwwision\DCBEventStore\Types\Tags;
 use Wwwision\DCBLibrary\DomainEvent;
+use Wwwision\DCBLibrary\ProvidesTags;
 use Wwwision\DCBLibrary\StreamCriteriaAware;
 
 /**
@@ -18,7 +21,7 @@ final class ClosureProjection implements Projection, StreamCriteriaAware
 {
     /**
      * @param S $initialState
-     * @param array<class-string, callable> $handlers
+     * @param array<class-string, mixed> $handlers
      */
     private function __construct(
         private readonly mixed $initialState,
@@ -39,13 +42,22 @@ final class ClosureProjection implements Projection, StreamCriteriaAware
 
     /**
      * @template E of DomainEvent
+     * @template SN
      * @param class-string<E> $class
-     * @param callable(S, E, EventEnvelope): S $cb
-     * @return self<S>
+     * @param (callable(S|SN, E, EventEnvelope): SN)|(S|SN) $cb
+     * @return self<S|SN>
      */
-    public function when(string $class, callable $cb): self
+    public function when(string $class, mixed $cb): self
     {
-        return new self($this->initialState, [...$this->handlers, $class => $cb], $this->onlyLastEvent);
+        return new self($this->initialState, [...$this->handlers, $class => $cb], $this->onlyLastEvent); // @phpstan-ignore return.type
+    }
+
+    /**
+     * @return TaggedProjection<S>
+     */
+    public function for(Tags|Tag|ProvidesTags $tags): TaggedProjection
+    {
+        return TaggedProjection::create($tags, $this);
     }
 
     /**
@@ -65,7 +77,10 @@ final class ClosureProjection implements Projection, StreamCriteriaAware
         if (!array_key_exists($domainEvent::class, $this->handlers)) {
             return $state;
         }
-        return $this->handlers[$domainEvent::class]($state, $domainEvent, $eventEnvelope);
+        if (is_callable($this->handlers[$domainEvent::class])) {
+            return $this->handlers[$domainEvent::class]($state, $domainEvent, $eventEnvelope);
+        }
+        return $this->handlers[$domainEvent::class];
     }
 
     public function getCriteria(): Criteria
