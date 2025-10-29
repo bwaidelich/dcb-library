@@ -10,6 +10,7 @@ use Wwwision\DCBEventStore\Types\StreamQuery\Criteria\EventTypesAndTagsCriterion
 use Wwwision\DCBEventStore\Types\Tag;
 use Wwwision\DCBEventStore\Types\Tags;
 use Wwwision\DCBLibrary\DomainEvent;
+use Wwwision\DCBLibrary\ProvidesTags;
 use Wwwision\DCBLibrary\StreamCriteriaAware;
 
 /**
@@ -29,16 +30,18 @@ final class TaggedProjection implements Projection, StreamCriteriaAware
 
     /**
      * @template PS
-     * @param Tags|Tag $tags
      * @param Projection<PS> $handlers
      * @return self<PS>
      */
-    public static function create(Tags|Tag $tags, Projection $handlers): self
+    public static function create(Tags|Tag|ProvidesTags $tags, Projection $handlers): self
     {
-        return new self(
-            $tags instanceof Tag ? Tags::create($tags) : $tags,
-            $handlers,
-        );
+        if ($tags instanceof ProvidesTags) {
+            $tags = $tags->tags();
+        }
+        if ($tags instanceof Tag) {
+            $tags = Tags::create($tags);
+        }
+        return new self($tags, $handlers);
     }
 
     /**
