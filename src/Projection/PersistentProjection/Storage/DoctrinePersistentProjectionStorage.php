@@ -26,6 +26,7 @@ use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueEqu
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueGreaterThan;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueGreaterThanOrEqual;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueIsNull;
+use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueIsTrue;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueLessThan;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueLessThanOrEqual;
 use Wwwision\DCBLibrary\Projection\PersistentProjection\Filter\Criteria\ValueStartsWith;
@@ -157,6 +158,7 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
             ValueLessThanOrEqual::class => $this->compareValueStatement($queryBuilder, $criteria->propertyName, $criteria->value, '<='),
             ValueStartsWith::class => $this->searchValueStatement($queryBuilder, $criteria->propertyName, $criteria->value . '%', $criteria->caseSensitive),
             ValueIsNull::class => 'JSON_TYPE(' . $this->extractPropertyValue($criteria->propertyName) . ') = \'NULL\'',
+            ValueIsTrue::class => $this->extractPropertyValue($criteria->propertyName) . ' = true',
             default => throw new \InvalidArgumentException(sprintf('Invalid/unsupported filter criteria "%s"', get_debug_type($criteria)), 1679561062),
         };
     }
@@ -184,12 +186,8 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
         return 'JSON_SEARCH(state COLLATE utf8mb4_unicode_520_ci, \'one\', :' . $paramName . ' COLLATE utf8mb4_unicode_520_ci, NULL, \'$.' . $escapedPropertyName . '\') IS NOT NULL';
     }
 
-    private function compareValueStatement(QueryBuilder $queryBuilder, string $propertyName, string|int|float|bool $value, string $operator): string
+    private function compareValueStatement(QueryBuilder $queryBuilder, string $propertyName, string|int|float $value, string $operator): string
     {
-        if (is_bool($value)) {
-            return $this->extractPropertyValue($propertyName) . ' ' . $operator . ($value ? 'true' : 'false');
-        }
-
         if (is_int($value)) {
             return $this->extractPropertyValue($propertyName) . ' ' . $operator . $value;
         }
@@ -222,7 +220,7 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
                 };
                 $queryBuilder->addOrderBy($timestampColumnName, $order);
             } else {
-                $queryBuilder->addOrderBy($this->extractPropertyValue($orderingField->field), $order);
+                $queryBuilder->addOrderBy($this->extractPropertyValue($orderingField->field, false), $order);
             }
         }
     }
@@ -232,7 +230,7 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
         $queryBuilder->setMaxResults($pagination->limit)->setFirstResult($pagination->offset);
     }
 
-    private function extractPropertyValue(string $propertyName): string
+    private function extractPropertyValue(string $propertyName, bool $caseSensitive = true): string
     {
         try {
             $escapedPropertyName = addslashes(json_encode($propertyName, JSON_THROW_ON_ERROR));
@@ -240,7 +238,7 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
             throw new \RuntimeException(sprintf('Failed to escape property name: %s', $e->getMessage()), 1759675406, $e);
         }
 
-        return 'JSON_EXTRACT(state, \'$.' . $escapedPropertyName . '\') COLLATE utf8mb4_unicode_520_ci';
+        return 'JSON_EXTRACT(state, \'$.' . $escapedPropertyName . '\')' . ($caseSensitive ? ' COLLATE utf8mb4_unicode_520_ci' : '');
     }
 
     public function setup(): void
