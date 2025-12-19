@@ -238,7 +238,7 @@ final class DoctrinePersistentProjectionStorage implements PersistentProjectionS
             throw new \RuntimeException(sprintf('Failed to escape property name: %s', $e->getMessage()), 1759675406, $e);
         }
 
-        return 'JSON_EXTRACT(state, \'$.' . $escapedPropertyName . '\')' . ($caseSensitive ? ' COLLATE utf8mb4_unicode_520_ci' : '');
+        return 'JSON_EXTRACT(state, \'$.' . $escapedPropertyName . '\')' . ($caseSensitive ? '' : ' COLLATE utf8mb4_unicode_520_ci');
     }
 
     public function setup(): void
